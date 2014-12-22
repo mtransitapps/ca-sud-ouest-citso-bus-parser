@@ -43,13 +43,6 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		return super.excludeRoute(gRoute);
 	}
 
-	@Override
-	public boolean excludeStop(GStop gStop) {
-		if ("0".equals(gStop.stop_code)) {
-			return true;
-		}
-		return super.excludeStop(gStop);
-	}
 
 	@Override
 	public String getRouteLongName(GRoute gRoute) {
@@ -109,6 +102,29 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		gStopName = Utils.replaceAll(gStopName, START_WITH_FACES, MSpec.SPACE);
 		gStopName = Utils.replaceAll(gStopName, SPACE_FACES, MSpec.SPACE);
 		return super.cleanStopNameFR(gStopName);
+	}
+
+	@Override
+	public String getStopCode(GStop gStop) {
+		if ("0".equals(gStop.stop_code)) {
+			if ("SCA1A".equals(gStop.stop_id)) {
+				return "70001";
+			} else if ("CHT178A".equals(gStop.stop_id)) {
+				return "70178";
+			} else if ("CHT300B".equals(gStop.stop_id)) {
+				return "70300";
+			} else if ("CHT265D".equals(gStop.stop_id)) {
+				return "70265";
+			} else if ("CHT229L".equals(gStop.stop_id)) {
+				return "70229";
+			} else if ("CHT264D".equals(gStop.stop_id)) {
+				return "70264";
+			} else {
+				System.out.println("Stop doesn't have an ID! " + gStop);
+				System.exit(-1);
+			}
+		}
+		return super.getStopCode(gStop);
 	}
 
 	@Override
