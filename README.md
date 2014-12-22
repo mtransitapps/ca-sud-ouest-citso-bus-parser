@@ -1,4 +1,4 @@
 ca-sud-ouest-citso-bus-parser
 =============================
 
-Parser for Sud-Ouest CITSO Bus data
+Parser for Sud-Ouest CIT Bus data
