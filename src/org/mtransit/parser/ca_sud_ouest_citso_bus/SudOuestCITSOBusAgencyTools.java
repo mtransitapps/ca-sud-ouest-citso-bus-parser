@@ -81,11 +81,11 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		return MSpec.cleanLabel(routeLongName);
 	}
 
-	private static final String ROUTE_COLOR = "00A6B5";
+	private static final String AGENCY_COLOR = "00A6B5";
 
 	@Override
-	public String getRouteColor(GRoute gRoute) {
-		return ROUTE_COLOR;
+	public String getAgencyColor() {
+		return AGENCY_COLOR;
 	}
 
 	@Override
