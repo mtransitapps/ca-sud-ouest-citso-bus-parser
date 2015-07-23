@@ -73,7 +73,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public String getRouteLongName(GRoute gRoute) {
-		String routeLongName = gRoute.route_long_name;
+		String routeLongName = gRoute.getRouteLongName();
 		routeLongName = CleanUtils.SAINT.matcher(routeLongName).replaceAll(CleanUtils.SAINT_REPLACEMENT);
 		return CleanUtils.cleanLabel(routeLongName);
 	}
@@ -87,7 +87,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
-		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.trip_headsign), gTrip.direction_id);
+		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
 	}
 
 	private static final Pattern DIRECTION = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
@@ -124,18 +124,18 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public String getStopCode(GStop gStop) {
-		if ("0".equals(gStop.stop_code)) {
-			if ("SCA1A".equals(gStop.stop_id)) {
+		if ("0".equals(gStop.getStopCode())) {
+			if ("SCA1A".equals(gStop.getStopId())) {
 				return "70001";
-			} else if ("CHT178A".equals(gStop.stop_id)) {
+			} else if ("CHT178A".equals(gStop.getStopId())) {
 				return "70178";
-			} else if ("CHT300B".equals(gStop.stop_id)) {
+			} else if ("CHT300B".equals(gStop.getStopId())) {
 				return "70300";
-			} else if ("CHT265D".equals(gStop.stop_id)) {
+			} else if ("CHT265D".equals(gStop.getStopId())) {
 				return "70265";
-			} else if ("CHT229L".equals(gStop.stop_id)) {
+			} else if ("CHT229L".equals(gStop.getStopId())) {
 				return "70229";
-			} else if ("CHT264D".equals(gStop.stop_id)) {
+			} else if ("CHT264D".equals(gStop.getStopId())) {
 				return "70264";
 			} else {
 				System.out.println("Stop doesn't have an ID! " + gStop);
