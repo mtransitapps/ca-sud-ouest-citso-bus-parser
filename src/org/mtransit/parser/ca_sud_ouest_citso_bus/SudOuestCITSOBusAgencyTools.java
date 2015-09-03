@@ -119,7 +119,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		gStopName = AVENUE.matcher(gStopName).replaceAll(AVENUE_REPLACEMENT);
 		gStopName = Utils.replaceAll(gStopName, START_WITH_FACES, CleanUtils.SPACE);
 		gStopName = Utils.replaceAll(gStopName, SPACE_FACES, CleanUtils.SPACE);
-		return super.cleanStopNameFR(gStopName);
+		return CleanUtils.cleanLabelFR(gStopName);
 	}
 
 	@Override
