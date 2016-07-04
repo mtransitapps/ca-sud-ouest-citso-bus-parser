@@ -1,18 +1,27 @@
 package org.mtransit.parser.ca_sud_ouest_citso_bus;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.mtransit.parser.DefaultAgencyTools;
+import org.mtransit.parser.Pair;
+import org.mtransit.parser.SplitUtils;
 import org.mtransit.parser.Utils;
+import org.mtransit.parser.SplitUtils.RouteTripSpec;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GSpec;
 import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
+import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
 import org.mtransit.parser.mt.data.MRoute;
+import org.mtransit.parser.mt.data.MTripStop;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
 
@@ -85,9 +94,129 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
+	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
+	static {
+		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		map2.put(31l, new RouteTripSpec(31l, //
+				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
+				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
+				.addTripSort(0, //
+						Arrays.asList(new String[] { //
+						"MTL1C", "CHT229K", "CHT425A" //
+						})) //
+				.addTripSort(1, //
+						Arrays.asList(new String[] { //
+						"CHT425A", "KAH13A", "MTL1C" //
+						})) //
+				.compileBothTripSort());
+		map2.put(32l, new RouteTripSpec(32l, //
+				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
+				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
+				.addTripSort(0, //
+						Arrays.asList(new String[] { //
+						"MTL1C", "LSL8C", "CHT13D" //
+						})) //
+				.addTripSort(1, //
+						Arrays.asList(new String[] { //
+						"CHT13D", "CHT229L", "MTL1C" //
+						})) //
+				.compileBothTripSort());
+		map2.put(33l, new RouteTripSpec(33l, //
+				0, MTrip.HEADSIGN_TYPE_STRING, "Faubourg Châteauguay", //
+				1, MTrip.HEADSIGN_TYPE_STRING, "Anjou / St-Joseph") //
+				.addTripSort(0, //
+						Arrays.asList(new String[] { //
+						"CHT473C", "CHT11A", "CHT425A" //
+						})) //
+				.addTripSort(1, //
+						Arrays.asList(new String[] { //
+						"CHT425A", "CHT11B", "CHT473C" //
+						})) //
+				.compileBothTripSort());
+		ALL_ROUTE_TRIPS2 = map2;
+	}
+
+	@Override
+	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
+		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
+			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+		}
+		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+	}
+
+	@Override
+	public ArrayList<MTrip> splitTrip(MRoute mRoute, GTrip gTrip, GSpec gtfs) {
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return ALL_ROUTE_TRIPS2.get(mRoute.getId()).getAllTrips();
+		}
+		return super.splitTrip(mRoute, gTrip, gtfs);
+	}
+
+	@Override
+	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()));
+		}
+		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
+	}
+
 	@Override
 	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return; // split
+		}
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
+	}
+
+	@Override
+	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
+		if (mTrip.getRouteId() == 21l) {
+			if (mTrip.getHeadsignId() == 0) {
+				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 22l) {
+			if (mTrip.getHeadsignId() == 0) {
+				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 23l) {
+			if (mTrip.getHeadsignId() == 0) {
+				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 24l) {
+			if (mTrip.getHeadsignId() == 0) {
+				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 25l) {
+			if (mTrip.getHeadsignId() == 0) {
+				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 27l) {
+			if (mTrip.getHeadsignId() == 0) {
+				mTrip.setHeadsignString("Maple / St-Francis", mTrip.getHeadsignId()); // Stationnement Incitatif
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 28l) {
+			if (mTrip.getHeadsignId() == 1) {
+				mTrip.setHeadsignString("Châteauguay", mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 97l) {
+			if (mTrip.getHeadsignId() == 0) {
+				mTrip.setHeadsignString("Coteaux-du-Lac", mTrip.getHeadsignId()); // Valleyfield
+				return true;
+			} else if (mTrip.getHeadsignId() == 1) {
+				mTrip.setHeadsignString("St-Zotique", mTrip.getHeadsignId()); // Valleyfield
+				return true;
+			}
+		}
+		System.out.printf("\nUnexpected trips to merge %s & %s!\n", mTrip, mTripToMerge);
+		System.exit(-1);
+		return false;
 	}
 
 	private static final Pattern DIRECTION = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
