@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.mtransit.parser.DefaultAgencyTools;
@@ -85,6 +86,22 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		String routeLongName = gRoute.getRouteLongName();
 		routeLongName = CleanUtils.SAINT.matcher(routeLongName).replaceAll(CleanUtils.SAINT_REPLACEMENT);
 		return CleanUtils.cleanLabel(routeLongName);
+	}
+
+	private static final Pattern DIGITS = Pattern.compile("[\\d]+");
+
+	@Override
+	public long getRouteId(GRoute gRoute) {
+		if (!Utils.isDigitsOnly(gRoute.getRouteId())) {
+			Matcher matcher = DIGITS.matcher(gRoute.getRouteId());
+			if (matcher.find()) {
+				return Integer.parseInt(matcher.group());
+			}
+			System.out.printf("\nUnexpected route ID for %s!\n", gRoute);
+			System.exit(-1);
+			return -1L;
+		}
+		return super.getRouteId(gRoute);
 	}
 
 	private static final String AGENCY_COLOR = "00A6B5";
