@@ -119,7 +119,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
-						"MTL1C", "CHT229K", "CHT425A" //
+						"MTL1C", "CHT1C", "CHT229K", "CHT425A" //
 						})) //
 				.addTripSort(1, //
 						Arrays.asList(new String[] { //
@@ -131,7 +131,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
-						"MTL1C", "LSL8C", "CHT13D" //
+						"MTL1C", "LSL8C", "CHT1G", "CHT13D" //
 						})) //
 				.addTripSort(1, //
 						Arrays.asList(new String[] { //
