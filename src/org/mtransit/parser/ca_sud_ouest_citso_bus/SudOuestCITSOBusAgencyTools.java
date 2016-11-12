@@ -131,7 +131,9 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
-						"MTL1C", "LSL8C", "CHT1G", "CHT13D" //
+						"MTL1C", "LSL8C", //
+								"CHT1G", "CHT1G_merged_102030406", //
+								"CHT13D" //
 						})) //
 				.addTripSort(1, //
 						Arrays.asList(new String[] { //
