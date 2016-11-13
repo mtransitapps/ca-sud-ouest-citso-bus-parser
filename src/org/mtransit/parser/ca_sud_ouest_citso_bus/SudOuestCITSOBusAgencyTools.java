@@ -132,7 +132,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
 						"MTL1C", "LSL8C", //
-								"CHT1G", "CHT1G_merged_102030406", //
+								"CHT1G", "CHT1G_merged_102030407", //
 								"CHT13D" //
 						})) //
 				.addTripSort(1, //
