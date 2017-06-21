@@ -26,8 +26,8 @@ import org.mtransit.parser.mt.data.MTripStop;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
 
-// http://www.amt.qc.ca/developers/
-// http://www.amt.qc.ca/xdata/citso/google_transit.zip
+// https://amt.qc.ca/en/about/open-data
+// https://rtm.quebec/xdata/citso/google_transit.zip
 public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
@@ -285,9 +285,14 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				return "70229";
 			} else if ("CHT264D".equals(gStop.getStopId())) {
 				return "70264";
+			} else if ("MEL25A".equals(gStop.getStopId())) {
+				return "78530";
+			} else if ("MGR28D".equals(gStop.getStopId())) {
+				return "78531";
 			} else {
-				System.out.println("Stop doesn't have an ID! " + gStop);
+				System.out.printf("\nUnexpected stop ID for %s!\n", gStop);
 				System.exit(-1);
+				return null;
 			}
 		}
 		return super.getStopCode(gStop);
