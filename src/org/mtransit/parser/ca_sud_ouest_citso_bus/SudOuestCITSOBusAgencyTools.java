@@ -26,7 +26,7 @@ import org.mtransit.parser.mt.data.MTripStop;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
 
-// https://amt.qc.ca/en/about/open-data
+// https://rtm.quebec/en/about/open-data
 // https://rtm.quebec/xdata/citso/google_transit.zip
 public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
