@@ -80,7 +80,6 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		return MAgency.ROUTE_TYPE_BUS;
 	}
 
-
 	@Override
 	public String getRouteLongName(GRoute gRoute) {
 		String routeLongName = gRoute.getRouteLongName();
@@ -289,6 +288,8 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				return "78530";
 			} else if ("MGR28D".equals(gStop.getStopId())) {
 				return "78531";
+			} else if ("SZO5D".equals(gStop.getStopId())) {
+				return "787916"; // NOT REALLY
 			} else {
 				System.out.printf("\nUnexpected stop ID for %s!\n", gStop);
 				System.exit(-1);
@@ -302,5 +303,4 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	public int getStopId(GStop gStop) {
 		return Integer.valueOf(getStopCode(gStop)); // using stop code as stop ID
 	}
-
 }
