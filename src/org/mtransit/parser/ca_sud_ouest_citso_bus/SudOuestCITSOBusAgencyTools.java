@@ -151,6 +151,22 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 						"CHT425A", "CHT11B", "CHT473C" //
 						})) //
 				.compileBothTripSort());
+		map2.put(98l, new RouteTripSpec(98l, //
+				0, MTrip.HEADSIGN_TYPE_STRING, "Kahnawake", //
+				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
+				.addTripSort(0, //
+						Arrays.asList(new String[] { //
+						"MTL1C", // Terminus Angrignon
+								"LSL4C", // ++
+								"KAH38B", // Route 207 Junction (sud)
+						})) //
+				.addTripSort(1, //
+						Arrays.asList(new String[] { //
+						"KAH38B", // Route 207 Junction (sud)
+								"KAH92C", // ++
+								"MTL1C", // Terminus Angrignon
+						})) //
+				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
@@ -188,49 +204,42 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
-		if (mTrip.getRouteId() == 21l) {
-			if (mTrip.getHeadsignId() == 0) {
-				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
+		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
+		if (mTrip.getRouteId() == 27L) {
+			if (Arrays.asList( //
+					"Maple / St-Francis", //
+					STATIONNEMENT_INCITATIF_SHORT + " Châteauguay" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString(STATIONNEMENT_INCITATIF_SHORT + " Châteauguay", mTrip.getHeadsignId());
 				return true;
 			}
-		} else if (mTrip.getRouteId() == 22l) {
-			if (mTrip.getHeadsignId() == 0) {
-				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
+		} else if (mTrip.getRouteId() == 28L) {
+			if (Arrays.asList( //
+					"Beauharnois", //
+					"Châteauguay", //
+					"Valleyfield" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Châteauguay", mTrip.getHeadsignId()); // Valleyfield
 				return true;
 			}
-		} else if (mTrip.getRouteId() == 23l) {
-			if (mTrip.getHeadsignId() == 0) {
-				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
+		} else if (mTrip.getRouteId() == 97L) {
+			if (Arrays.asList( //
+					"Valleyfield", //
+					"Coteau-Du-Lac", //
+					"Coteaux-Du-Lac" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Coteaux-Du-Lac", mTrip.getHeadsignId());
+				return true;
+			} else if (Arrays.asList( //
+					"Valleyfield", //
+					"St-Zotique" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("St-Zotique", mTrip.getHeadsignId());
 				return true;
 			}
-		} else if (mTrip.getRouteId() == 24l) {
-			if (mTrip.getHeadsignId() == 0) {
-				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (mTrip.getRouteId() == 25l) {
-			if (mTrip.getHeadsignId() == 0) {
-				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (mTrip.getRouteId() == 27l) {
-			if (mTrip.getHeadsignId() == 0) {
-				mTrip.setHeadsignString("Maple / St-Francis", mTrip.getHeadsignId()); // Stationnement Incitatif
-				return true;
-			}
-		} else if (mTrip.getRouteId() == 28l) {
-			if (mTrip.getHeadsignId() == 1) {
-				mTrip.setHeadsignString("Châteauguay", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (mTrip.getRouteId() == 97l) {
-			if (mTrip.getHeadsignId() == 0) {
-				mTrip.setHeadsignString("Coteaux-du-Lac", mTrip.getHeadsignId()); // Valleyfield
-				return true;
-			} else if (mTrip.getHeadsignId() == 1) {
-				mTrip.setHeadsignString("St-Zotique", mTrip.getHeadsignId()); // Valleyfield
-				return true;
-			}
+		}
+		if (isGoodEnoughAccepted()) {
+			return super.mergeHeadsign(mTrip, mTripToMerge);
 		}
 		System.out.printf("\nUnexpected trips to merge %s & %s!\n", mTrip, mTripToMerge);
 		System.exit(-1);
@@ -240,9 +249,14 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern DIRECTION = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
 	private static final String DIRECTION_REPLACEMENT = "";
 
+	private static final String STATIONNEMENT_INCITATIF_SHORT = "P+R";
+	private static final Pattern STATIONNEMENT_INCITATIF_ = Pattern.compile("((^|\\W){1}(stationnement incitatif)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final String STATIONNEMENT_INCITATIF_REPLACEMENT = "$2" + STATIONNEMENT_INCITATIF_SHORT + "$4";
+
 	@Override
 	public String cleanTripHeadsign(String tripHeadsign) {
 		tripHeadsign = DIRECTION.matcher(tripHeadsign).replaceAll(DIRECTION_REPLACEMENT);
+		tripHeadsign = STATIONNEMENT_INCITATIF_.matcher(tripHeadsign).replaceAll(STATIONNEMENT_INCITATIF_REPLACEMENT);
 		return CleanUtils.cleanLabelFR(tripHeadsign);
 	}
 
@@ -269,6 +283,11 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		return CleanUtils.cleanLabelFR(gStopName);
 	}
 
+	private static final String A = "A";
+	private static final String B = "B";
+	private static final String C = "C";
+	private static final String D = "D";
+
 	@Override
 	public String getStopCode(GStop gStop) {
 		if ("0".equals(gStop.getStopCode())) {
@@ -290,11 +309,35 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				return "78531";
 			} else if ("SZO5D".equals(gStop.getStopId())) {
 				return "787916"; // NOT REALLY
-			} else {
-				System.out.printf("\nUnexpected stop ID for %s!\n", gStop);
-				System.exit(-1);
-				return null;
 			}
+			Matcher matcher = DIGITS.matcher(gStop.getStopId());
+			if (matcher.find()) {
+				int digits = Integer.parseInt(matcher.group());
+				int stopId;
+				if (gStop.getStopId().startsWith("KAH")) {
+					stopId = 100000;
+				} else {
+					System.out.printf("\nStop doesn't have an ID (start with)! %s\n", gStop);
+					System.exit(-1);
+					stopId = -1;
+				}
+				if (gStop.getStopId().endsWith(A)) {
+					stopId += 1000;
+				} else if (gStop.getStopId().endsWith(B)) {
+					stopId += 2000;
+				} else if (gStop.getStopId().endsWith(C)) {
+					stopId += 3000;
+				} else if (gStop.getStopId().endsWith(D)) {
+					stopId += 4000;
+				} else {
+					System.out.printf("\nStop doesn't have an ID (end with)! %s\n", gStop);
+					System.exit(-1);
+				}
+				return String.valueOf(stopId + digits);
+			}
+			System.out.printf("\nUnexpected stop ID for %s!\n", gStop);
+			System.exit(-1);
+			return null;
 		}
 		return super.getStopCode(gStop);
 	}
