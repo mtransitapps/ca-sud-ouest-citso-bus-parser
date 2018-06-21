@@ -113,67 +113,83 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
-		map2.put(31l, new RouteTripSpec(31l, //
+		map2.put(31L, new RouteTripSpec(31L, //
 				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
-						"MTL1C", "CHT1C", "CHT229K", "CHT425A" //
+						"78364", // Terminus Angrignon
+								"78135", // boul. St-Jean-Baptiste / face au stationnement inc
+								"78043", // boul. St-Joseph / boul. d'Anjou
 						})) //
 				.addTripSort(1, //
 						Arrays.asList(new String[] { //
-						"CHT425A", "KAH13A", "MTL1C" //
+						"78043", // boul. St-Joseph / boul. d'Anjou
+								"78734", // ++
+								"78364", // Terminus Angrignon
 						})) //
 				.compileBothTripSort());
-		map2.put(32l, new RouteTripSpec(32l, //
+		map2.put(32L, new RouteTripSpec(32L, //
 				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
-						"MTL1C", "LSL8C", //
-								"CHT1G", "CHT1G_merged_102030407", //
-								"CHT13D" //
+						"78364", // Terminus Angrignon
+								"78315", // ++
+								"78171", // boul. d'Anjou / boul. St-Joseph
 						})) //
 				.addTripSort(1, //
 						Arrays.asList(new String[] { //
-						"CHT13D", "CHT229L", "MTL1C" //
+						"78171", // boul. d'Anjou / boul. St-Joseph
+								"78136", // ++
+								"78364", // Terminus Angrignon
 						})) //
 				.compileBothTripSort());
-		map2.put(33l, new RouteTripSpec(33l, //
+		map2.put(33L, new RouteTripSpec(33L, //
 				0, MTrip.HEADSIGN_TYPE_STRING, "Faubourg Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Anjou / St-Joseph") //
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
-						"CHT473C", "CHT11A", "CHT425A" //
+						"78885", // Faubourg Châteauguay
+								"78022", // boul. Primeau / rue Principale
+								"78043", // boul. St-Joseph / boul. d'Anjou
 						})) //
 				.addTripSort(1, //
 						Arrays.asList(new String[] { //
-						"CHT425A", "CHT11B", "CHT473C" //
+						"78043", // boul. St-Joseph / boul. d'Anjou
+								"78023", // rue Principale / boul. Primeau
+								"78885", // Faubourg Châteauguay
 						})) //
 				.compileBothTripSort());
-		map2.put(98l, new RouteTripSpec(98l, //
+		map2.put(98L, new RouteTripSpec(98L, //
 				0, MTrip.HEADSIGN_TYPE_STRING, "Kahnawake", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
-						"MTL1C", // Terminus Angrignon
-								"LSL4C", // ++
+						"78364", // Terminus Angrignon
+								"78567", // ++
 								"KAH38B", // Route 207 Junction (sud)
 						})) //
 				.addTripSort(1, //
 						Arrays.asList(new String[] { //
 						"KAH38B", // Route 207 Junction (sud)
 								"KAH92C", // ++
-								"MTL1C", // Terminus Angrignon
+								"78364", // Terminus Angrignon
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
 	@Override
+	public String cleanStopOriginalId(String gStopId) {
+		gStopId = CleanUtils.cleanMergedID(gStopId);
+		return gStopId;
+	}
+
+	@Override
 	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
 		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
-			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop, this);
 		}
 		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
 	}
@@ -189,7 +205,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()));
+			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()), this);
 		}
 		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
 	}
@@ -211,6 +227,12 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 					STATIONNEMENT_INCITATIF_SHORT + " Châteauguay" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString(STATIONNEMENT_INCITATIF_SHORT + " Châteauguay", mTrip.getHeadsignId());
+				return true;
+			} else if (Arrays.asList( //
+					"Maple / St-Francis", //
+					"Stat Châteauguay" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Stat Châteauguay", mTrip.getHeadsignId());
 				return true;
 			}
 		} else if (mTrip.getRouteId() == 28L) {
@@ -238,9 +260,6 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				return true;
 			}
 		}
-		if (isGoodEnoughAccepted()) {
-			return super.mergeHeadsign(mTrip, mTripToMerge);
-		}
 		System.out.printf("\nUnexpected trips to merge %s & %s!\n", mTrip, mTripToMerge);
 		System.exit(-1);
 		return false;
@@ -257,6 +276,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	public String cleanTripHeadsign(String tripHeadsign) {
 		tripHeadsign = DIRECTION.matcher(tripHeadsign).replaceAll(DIRECTION_REPLACEMENT);
 		tripHeadsign = STATIONNEMENT_INCITATIF_.matcher(tripHeadsign).replaceAll(STATIONNEMENT_INCITATIF_REPLACEMENT);
+		tripHeadsign = CleanUtils.cleanStreetTypesFRCA(tripHeadsign);
 		return CleanUtils.cleanLabelFR(tripHeadsign);
 	}
 
@@ -288,55 +308,11 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	private static final String C = "C";
 	private static final String D = "D";
 
+	private static final String ZERO = "0";
+
 	@Override
 	public String getStopCode(GStop gStop) {
-		if ("0".equals(gStop.getStopCode())) {
-			if ("SCA1A".equals(gStop.getStopId())) {
-				return "70001";
-			} else if ("CHT178A".equals(gStop.getStopId())) {
-				return "70178";
-			} else if ("CHT300B".equals(gStop.getStopId())) {
-				return "70300";
-			} else if ("CHT265D".equals(gStop.getStopId())) {
-				return "70265";
-			} else if ("CHT229L".equals(gStop.getStopId())) {
-				return "70229";
-			} else if ("CHT264D".equals(gStop.getStopId())) {
-				return "70264";
-			} else if ("MEL25A".equals(gStop.getStopId())) {
-				return "78530";
-			} else if ("MGR28D".equals(gStop.getStopId())) {
-				return "78531";
-			} else if ("SZO5D".equals(gStop.getStopId())) {
-				return "787916"; // NOT REALLY
-			}
-			Matcher matcher = DIGITS.matcher(gStop.getStopId());
-			if (matcher.find()) {
-				int digits = Integer.parseInt(matcher.group());
-				int stopId;
-				if (gStop.getStopId().startsWith("KAH")) {
-					stopId = 100000;
-				} else {
-					System.out.printf("\nStop doesn't have an ID (start with)! %s\n", gStop);
-					System.exit(-1);
-					stopId = -1;
-				}
-				if (gStop.getStopId().endsWith(A)) {
-					stopId += 1000;
-				} else if (gStop.getStopId().endsWith(B)) {
-					stopId += 2000;
-				} else if (gStop.getStopId().endsWith(C)) {
-					stopId += 3000;
-				} else if (gStop.getStopId().endsWith(D)) {
-					stopId += 4000;
-				} else {
-					System.out.printf("\nStop doesn't have an ID (end with)! %s\n", gStop);
-					System.exit(-1);
-				}
-				return String.valueOf(stopId + digits);
-			}
-			System.out.printf("\nUnexpected stop ID for %s!\n", gStop);
-			System.exit(-1);
+		if (ZERO.equals(gStop.getStopCode())) {
 			return null;
 		}
 		return super.getStopCode(gStop);
@@ -344,6 +320,38 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public int getStopId(GStop gStop) {
-		return Integer.valueOf(getStopCode(gStop)); // using stop code as stop ID
+		String stopCode = getStopCode(gStop);
+		if (stopCode != null && stopCode.length() > 0 && Utils.isDigitsOnly(stopCode)) {
+			return Integer.valueOf(stopCode); // using stop code as stop ID
+		}
+		Matcher matcher = DIGITS.matcher(gStop.getStopId());
+		if (matcher.find()) {
+			int digits = Integer.parseInt(matcher.group());
+			int stopId;
+			if (gStop.getStopId().startsWith("KAH")) {
+				stopId = 1_000_000;
+			} else {
+				System.out.printf("\nStop doesn't have an ID (start with)! %s\n", gStop);
+				System.exit(-1);
+				return -1;
+			}
+			if (gStop.getStopId().endsWith(A)) {
+				stopId += 1000;
+			} else if (gStop.getStopId().endsWith(B)) {
+				stopId += 2000;
+			} else if (gStop.getStopId().endsWith(C)) {
+				stopId += 3000;
+			} else if (gStop.getStopId().endsWith(D)) {
+				stopId += 4000;
+			} else {
+				System.out.printf("\nStop doesn't have an ID (end with)! %s!\n", gStop);
+				System.exit(-1);
+				return -1;
+			}
+			return stopId + digits;
+		}
+		System.out.printf("\nUnexpected stop ID for %s!\n", gStop);
+		System.exit(-1);
+		return -1;
 	}
 }
