@@ -124,6 +124,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
 						"78364", // Terminus Angrignon
+								"78126", // boul. St-Jean Baptiste / boul. St-Francis
 								"78135", // boul. St-Jean-Baptiste / face au stationnement inc
 								"78043", // boul. St-Joseph / boul. d'Anjou
 						})) //
@@ -141,6 +142,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 						Arrays.asList(new String[] { //
 						"78364", // Terminus Angrignon
 								"78315", // ++
+								"78128", // boul. St-Francis / boul. St-Jean-Baptiste
 								"78171", // boul. d'Anjou / boul. St-Joseph
 						})) //
 				.addTripSort(1, //
