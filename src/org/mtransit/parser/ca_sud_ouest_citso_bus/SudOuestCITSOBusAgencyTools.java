@@ -181,6 +181,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 						Arrays.asList(new String[] { //
 						"KAH38B", // Route 207 Junction (sud)
 								"KAH92C", // ++
+								"78734", // route 132 / Rond-Point Bédard
 								"78364", // Terminus Angrignon
 						})) //
 				.compileBothTripSort());
@@ -228,7 +229,15 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
 		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
-		if (mTrip.getRouteId() == 27L) {
+		if (mTrip.getRouteId() == 22L) {
+			if (Arrays.asList( //
+					STATIONNEMENT_INCITATIF_SHORT, //
+					"Montréal" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 27L) {
 			if (Arrays.asList( //
 					"Maple / St-Francis", //
 					STATIONNEMENT_INCITATIF_SHORT + " Châteauguay" //
