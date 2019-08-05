@@ -123,7 +123,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
-						"78364", // Terminus Angrignon
+						"78364", "78904", // Terminus Angrignon
 								"78126", // boul. St-Jean Baptiste / boul. St-Francis
 								"78135", // boul. St-Jean-Baptiste / face au stationnement inc
 								"78043", // boul. St-Joseph / boul. d'Anjou
@@ -132,7 +132,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 						Arrays.asList(new String[] { //
 						"78043", // boul. St-Joseph / boul. d'Anjou
 								"78734", // ++
-								"78364", // Terminus Angrignon
+								"78364", "78904", // Terminus Angrignon
 						})) //
 				.compileBothTripSort());
 		map2.put(32L, new RouteTripSpec(32L, //
@@ -140,7 +140,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
-						"78364", // Terminus Angrignon
+						"78364", "78905", // Terminus Angrignon
 								"78315", // ++
 								"78128", // boul. St-Francis / boul. St-Jean-Baptiste
 								"78171", // boul. d'Anjou / boul. St-Joseph
@@ -149,7 +149,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 						Arrays.asList(new String[] { //
 						"78171", // boul. d'Anjou / boul. St-Joseph
 								"78136", // ++
-								"78364", // Terminus Angrignon
+								"78364", "78905", // Terminus Angrignon
 						})) //
 				.compileBothTripSort());
 		map2.put(33L, new RouteTripSpec(33L, //
@@ -173,7 +173,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
 						Arrays.asList(new String[] { //
-						"78364", // Terminus Angrignon
+						"78364", "78900", // Terminus Angrignon
 								"78567", // ++
 								"KAH38B", // Route 207 Junction (sud)
 						})) //
@@ -182,7 +182,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 						"KAH38B", // Route 207 Junction (sud)
 								"KAH92C", // ++
 								"78734", // route 132 / Rond-Point Bédard
-								"78364", // Terminus Angrignon
+								"78364", "78900", // Terminus Angrignon
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
