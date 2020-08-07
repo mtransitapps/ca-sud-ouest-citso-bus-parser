@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.mtransit.parser.DefaultAgencyTools;
+import org.mtransit.parser.MTLog;
 import org.mtransit.parser.Pair;
 import org.mtransit.parser.SplitUtils;
 import org.mtransit.parser.Utils;
@@ -40,15 +41,15 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		new SudOuestCITSOBusAgencyTools().start(args);
 	}
 
-	private HashSet<String> serviceIds;
+	private HashSet<Integer> serviceIds;
 
 	@Override
 	public void start(String[] args) {
-		System.out.printf("\nGenerating CITSO bus data...");
+		MTLog.log("Generating CITSO bus data...");
 		long start = System.currentTimeMillis();
-		this.serviceIds = extractUsefulServiceIds(args, this);
+		this.serviceIds = extractUsefulServiceIdInts(args, this);
 		super.start(args);
-		System.out.printf("\nGenerating CITSO bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
+		MTLog.log("Generating CITSO bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
 	@Override
@@ -59,7 +60,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public boolean excludeCalendar(GCalendar gCalendar) {
 		if (this.serviceIds != null) {
-			return excludeUselessCalendar(gCalendar, this.serviceIds);
+			return excludeUselessCalendarInt(gCalendar, this.serviceIds);
 		}
 		return super.excludeCalendar(gCalendar);
 	}
@@ -67,7 +68,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public boolean excludeCalendarDate(GCalendarDate gCalendarDates) {
 		if (this.serviceIds != null) {
-			return excludeUselessCalendarDate(gCalendarDates, this.serviceIds);
+			return excludeUselessCalendarDateInt(gCalendarDates, this.serviceIds);
 		}
 		return super.excludeCalendarDate(gCalendarDates);
 	}
@@ -75,7 +76,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public boolean excludeTrip(GTrip gTrip) {
 		if (this.serviceIds != null) {
-			return excludeUselessTrip(gTrip, this.serviceIds);
+			return excludeUselessTripInt(gTrip, this.serviceIds);
 		}
 		return super.excludeTrip(gTrip);
 	}
@@ -101,9 +102,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 			if (matcher.find()) {
 				return Integer.parseInt(matcher.group());
 			}
-			System.out.printf("\nUnexpected route ID for %s!\n", gRoute);
-			System.exit(-1);
-			return -1L;
+			throw new MTLog.Fatal("Unexpected route ID for %s!", gRoute);
 		}
 		return super.getRouteId(gRoute);
 	}
@@ -166,23 +165,6 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 						"78043", // boul. St-Joseph / boul. d'Anjou
 								"78023", // rue Principale / boul. Primeau
 								"78885", // Faubourg Châteauguay
-						})) //
-				.compileBothTripSort());
-		map2.put(98L, new RouteTripSpec(98L, //
-				0, MTrip.HEADSIGN_TYPE_STRING, "Kahnawake", //
-				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
-				.addTripSort(0, //
-						Arrays.asList(new String[] { //
-						"78364", "78900", // Terminus Angrignon
-								"78567", // ++
-								"KAH38B", // Route 207 Junction (sud)
-						})) //
-				.addTripSort(1, //
-						Arrays.asList(new String[] { //
-						"KAH38B", // Route 207 Junction (sud)
-								"KAH92C", // ++
-								"78734", // route 132 / Rond-Point Bédard
-								"78364", "78900", // Terminus Angrignon
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
@@ -276,9 +258,16 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				return true;
 			}
 		}
-		System.out.printf("\nUnexpected trips to merge %s & %s!\n", mTrip, mTripToMerge);
-		System.exit(-1);
-		return false;
+		if (mTrip.getRouteId() == 98L) {
+			if (Arrays.asList( //
+					"Montréal", //
+					"Montréal - Kahnawake" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Montréal - Kahnawake", mTrip.getHeadsignId());
+				return true;
+			}
+		}
+		throw new MTLog.Fatal("Unexpected trips to merge %s & %s!", mTrip, mTripToMerge);
 	}
 
 	private static final Pattern DIRECTION = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
@@ -347,9 +336,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 			if (gStop.getStopId().startsWith("KAH")) {
 				stopId = 1_000_000;
 			} else {
-				System.out.printf("\nStop doesn't have an ID (start with)! %s\n", gStop);
-				System.exit(-1);
-				return -1;
+				throw new MTLog.Fatal("Stop doesn't have an ID (start with)! %s", gStop);
 			}
 			if (gStop.getStopId().endsWith(A)) {
 				stopId += 1000;
@@ -360,14 +347,10 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 			} else if (gStop.getStopId().endsWith(D)) {
 				stopId += 4000;
 			} else {
-				System.out.printf("\nStop doesn't have an ID (end with)! %s!\n", gStop);
-				System.exit(-1);
-				return -1;
+				throw new MTLog.Fatal("Stop doesn't have an ID (end with)! %s!", gStop);
 			}
 			return stopId + digits;
 		}
-		System.out.printf("\nUnexpected stop ID for %s!\n", gStop);
-		System.exit(-1);
-		return -1;
+		throw new MTLog.Fatal("Unexpected stop ID for %s!", gStop);
 	}
 }
