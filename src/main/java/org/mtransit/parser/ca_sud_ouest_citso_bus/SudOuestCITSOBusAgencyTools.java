@@ -27,8 +27,8 @@ import org.mtransit.parser.mt.data.MTripStop;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
 
-// https://rtm.quebec/en/about/open-data
-// https://rtm.quebec/xdata/citso/google_transit.zip
+// https://exo.quebec/en/about/open-data
+// https://exo.quebec/xdata/citso/google_transit.zip
 public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
@@ -114,58 +114,58 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
-	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
+	private static final HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
-		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
 		map2.put(31L, new RouteTripSpec(31L, //
 				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
-						Arrays.asList(new String[] { //
+						Arrays.asList( //
 						"78364", "78904", // Terminus Angrignon
 								"78126", // boul. St-Jean Baptiste / boul. St-Francis
 								"78135", // boul. St-Jean-Baptiste / face au stationnement inc
-								"78043", // boul. St-Joseph / boul. d'Anjou
-						})) //
+								"78043" // boul. St-Joseph / boul. d'Anjou
+						)) //
 				.addTripSort(1, //
-						Arrays.asList(new String[] { //
+						Arrays.asList( //
 						"78043", // boul. St-Joseph / boul. d'Anjou
 								"78734", // ++
-								"78364", "78904", // Terminus Angrignon
-						})) //
+								"78364", "78904" // Terminus Angrignon
+						)) //
 				.compileBothTripSort());
 		map2.put(32L, new RouteTripSpec(32L, //
 				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
-						Arrays.asList(new String[] { //
+						Arrays.asList( //
 						"78364", "78905", // Terminus Angrignon
 								"78315", // ++
 								"78128", // boul. St-Francis / boul. St-Jean-Baptiste
-								"78171", // boul. d'Anjou / boul. St-Joseph
-						})) //
+								"78171" // boul. d'Anjou / boul. St-Joseph
+						)) //
 				.addTripSort(1, //
-						Arrays.asList(new String[] { //
+						Arrays.asList( //
 						"78171", // boul. d'Anjou / boul. St-Joseph
 								"78136", // ++
-								"78364", "78905", // Terminus Angrignon
-						})) //
+								"78364", "78905" // Terminus Angrignon
+						)) //
 				.compileBothTripSort());
 		map2.put(33L, new RouteTripSpec(33L, //
 				0, MTrip.HEADSIGN_TYPE_STRING, "Faubourg Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Anjou / St-Joseph") //
 				.addTripSort(0, //
-						Arrays.asList(new String[] { //
+						Arrays.asList( //
 						"78885", // Faubourg Châteauguay
 								"78022", // boul. Primeau / rue Principale
-								"78043", // boul. St-Joseph / boul. d'Anjou
-						})) //
+								"78043" // boul. St-Joseph / boul. d'Anjou
+						)) //
 				.addTripSort(1, //
-						Arrays.asList(new String[] { //
+						Arrays.asList( //
 						"78043", // boul. St-Joseph / boul. d'Anjou
 								"78023", // rue Principale / boul. Primeau
-								"78885", // Faubourg Châteauguay
-						})) //
+								"78885" // Faubourg Châteauguay
+						)) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
@@ -205,7 +205,10 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return; // split
 		}
-		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
+		mTrip.setHeadsignString(
+			cleanTripHeadsign(gTrip.getTripHeadsign()),
+			gTrip.getDirectionIdOrDefault()
+		);
 	}
 
 	@Override
@@ -221,25 +224,27 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 			}
 		} else if (mTrip.getRouteId() == 27L) {
 			if (Arrays.asList( //
-					"Maple / St-Francis", //
+					"St-Françis", //
 					STATIONNEMENT_INCITATIF_SHORT + " Châteauguay" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString(STATIONNEMENT_INCITATIF_SHORT + " Châteauguay", mTrip.getHeadsignId());
 				return true;
-			} else if (Arrays.asList( //
-					"Maple / St-Francis", //
-					"Stat Châteauguay" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Stat Châteauguay", mTrip.getHeadsignId());
-				return true;
 			}
 		} else if (mTrip.getRouteId() == 28L) {
 			if (Arrays.asList( //
-					"Beauharnois", //
 					"Châteauguay", //
+					"Beauharnois", //
+					"Salaberry-De-Valleyfield" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Salaberry-De-Valleyfield", mTrip.getHeadsignId());
+				return true;
+			}
+			if (Arrays.asList( //
+					"Châteauguay", //
+					"Beauharnois", //
 					"Valleyfield" //
 			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Châteauguay", mTrip.getHeadsignId()); // Valleyfield
+				mTrip.setHeadsignString("Valleyfield", mTrip.getHeadsignId());
 				return true;
 			}
 		} else if (mTrip.getRouteId() == 97L) {
@@ -285,11 +290,11 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		return CleanUtils.cleanLabelFR(tripHeadsign);
 	}
 
-	private static final Pattern START_WITH_FACE_A = Pattern.compile("^(face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+	private static final Pattern START_WITH_FACE_A = Pattern.compile("^(face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.CANON_EQ);
 	private static final Pattern START_WITH_FACE_AU = Pattern.compile("^(face au )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	private static final Pattern START_WITH_FACE = Pattern.compile("^(face )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-	private static final Pattern SPACE_FACE_A = Pattern.compile("( face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+	private static final Pattern SPACE_FACE_A = Pattern.compile("( face à )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.CANON_EQ);
 	private static final Pattern SPACE_WITH_FACE_AU = Pattern.compile("( face au )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	private static final Pattern SPACE_WITH_FACE = Pattern.compile("( face )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
