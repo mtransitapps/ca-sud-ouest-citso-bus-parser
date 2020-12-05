@@ -117,7 +117,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	private static final HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
-		map2.put(31L, new RouteTripSpec(31L, //
+		map2.put(31L, new RouteTripSpec(31L, // BECAUSE 1 direction instead of 2
 				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
@@ -134,7 +134,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 								"78364", "78904" // Terminus Angrignon
 						)) //
 				.compileBothTripSort());
-		map2.put(32L, new RouteTripSpec(32L, //
+		map2.put(32L, new RouteTripSpec(32L, // BECAUSE 1 direction instead of 2
 				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
@@ -151,7 +151,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 								"78364", "78905" // Terminus Angrignon
 						)) //
 				.compileBothTripSort());
-		map2.put(33L, new RouteTripSpec(33L, //
+		map2.put(33L, new RouteTripSpec(33L, // BECAUSE 1 direction instead of 2
 				0, MTrip.HEADSIGN_TYPE_STRING, "Faubourg Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Anjou / St-Joseph") //
 				.addTripSort(0, //
@@ -212,67 +212,13 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
+	public boolean directionFinderEnabled() {
+		return true;
+	}
+
+	@Override
 	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
-		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
-		if (mTrip.getRouteId() == 22L) {
-			if (Arrays.asList( //
-					STATIONNEMENT_INCITATIF_SHORT, //
-					"Montréal" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Montréal", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (mTrip.getRouteId() == 27L) {
-			if (Arrays.asList( //
-					"St-Françis", //
-					STATIONNEMENT_INCITATIF_SHORT + " Châteauguay" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(STATIONNEMENT_INCITATIF_SHORT + " Châteauguay", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (mTrip.getRouteId() == 28L) {
-			if (Arrays.asList( //
-					"Châteauguay", //
-					"Beauharnois", //
-					"Salaberry-De-Valleyfield" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Salaberry-De-Valleyfield", mTrip.getHeadsignId());
-				return true;
-			}
-			if (Arrays.asList( //
-					"Châteauguay", //
-					"Beauharnois", //
-					"Valleyfield" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Valleyfield", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (mTrip.getRouteId() == 97L) {
-			if (Arrays.asList( //
-					"Valleyfield", //
-					"Coteau-Du-Lac", //
-					"Coteaux-Du-Lac" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Coteaux-Du-Lac", mTrip.getHeadsignId());
-				return true;
-			} else if (Arrays.asList( //
-					"Valleyfield", //
-					"St-Zotique" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("St-Zotique", mTrip.getHeadsignId());
-				return true;
-			}
-		}
-		if (mTrip.getRouteId() == 98L) {
-			if (Arrays.asList( //
-					"Montréal", //
-					"Montréal - Kahnawake" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Montréal - Kahnawake", mTrip.getHeadsignId());
-				return true;
-			}
-		}
-		throw new MTLog.Fatal("Unexpected trips to merge %s & %s!", mTrip, mTripToMerge);
+		throw new MTLog.Fatal("%s: Using direction finder to merge %s and %s!", mTrip.getRouteId(), mTrip, mTripToMerge);
 	}
 
 	private static final Pattern DIRECTION = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
