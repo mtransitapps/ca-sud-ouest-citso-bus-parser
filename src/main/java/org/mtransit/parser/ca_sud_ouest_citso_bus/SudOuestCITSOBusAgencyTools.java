@@ -1,19 +1,14 @@
 package org.mtransit.parser.ca_sud_ouest_citso_bus;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
 import org.mtransit.parser.Pair;
 import org.mtransit.parser.SplitUtils;
-import org.mtransit.parser.Utils;
 import org.mtransit.parser.SplitUtils.RouteTripSpec;
+import org.mtransit.parser.Utils;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
@@ -23,15 +18,22 @@ import org.mtransit.parser.gtfs.data.GTrip;
 import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
 import org.mtransit.parser.mt.data.MRoute;
-import org.mtransit.parser.mt.data.MTripStop;
-import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
+import org.mtransit.parser.mt.data.MTripStop;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // https://exo.quebec/en/about/open-data
 // https://exo.quebec/xdata/citso/google_transit.zip
 public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
-	public static void main(String[] args) {
+	public static void main(@Nullable String[] args) {
 		if (args == null || args.length == 0) {
 			args = new String[3];
 			args[0] = "input/gtfs.zip";
@@ -44,7 +46,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	private HashSet<Integer> serviceIds;
 
 	@Override
-	public void start(String[] args) {
+	public void start(@NotNull String[] args) {
 		MTLog.log("Generating CITSO bus data...");
 		long start = System.currentTimeMillis();
 		this.serviceIds = extractUsefulServiceIdInts(args, this);
@@ -58,7 +60,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public boolean excludeCalendar(GCalendar gCalendar) {
+	public boolean excludeCalendar(@NotNull GCalendar gCalendar) {
 		if (this.serviceIds != null) {
 			return excludeUselessCalendarInt(gCalendar, this.serviceIds);
 		}
@@ -66,7 +68,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public boolean excludeCalendarDate(GCalendarDate gCalendarDates) {
+	public boolean excludeCalendarDate(@NotNull GCalendarDate gCalendarDates) {
 		if (this.serviceIds != null) {
 			return excludeUselessCalendarDateInt(gCalendarDates, this.serviceIds);
 		}
@@ -74,20 +76,22 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public boolean excludeTrip(GTrip gTrip) {
+	public boolean excludeTrip(@NotNull GTrip gTrip) {
 		if (this.serviceIds != null) {
 			return excludeUselessTripInt(gTrip, this.serviceIds);
 		}
 		return super.excludeTrip(gTrip);
 	}
 
+	@NotNull
 	@Override
 	public Integer getAgencyRouteType() {
 		return MAgency.ROUTE_TYPE_BUS;
 	}
 
+	@NotNull
 	@Override
-	public String getRouteLongName(GRoute gRoute) {
+	public String getRouteLongName(@NotNull GRoute gRoute) {
 		String routeLongName = gRoute.getRouteLongName();
 		routeLongName = CleanUtils.SAINT.matcher(routeLongName).replaceAll(CleanUtils.SAINT_REPLACEMENT);
 		return CleanUtils.cleanLabel(routeLongName);
@@ -96,9 +100,11 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern DIGITS = Pattern.compile("[\\d]+");
 
 	@Override
-	public long getRouteId(GRoute gRoute) {
-		if (!Utils.isDigitsOnly(gRoute.getRouteId())) {
-			Matcher matcher = DIGITS.matcher(gRoute.getRouteId());
+	public long getRouteId(@NotNull GRoute gRoute) {
+		//noinspection deprecation
+		final String routeId = gRoute.getRouteId();
+		if (!Utils.isDigitsOnly(routeId)) {
+			Matcher matcher = DIGITS.matcher(routeId);
 			if (matcher.find()) {
 				return Integer.parseInt(matcher.group());
 			}
@@ -109,12 +115,14 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	private static final String AGENCY_COLOR = "1F1F1F"; // DARK GRAY (from GTFS)
 
+	@NotNull
 	@Override
 	public String getAgencyColor() {
 		return AGENCY_COLOR;
 	}
 
 	private static final HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
+
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
 		map2.put(31L, new RouteTripSpec(31L, // BECAUSE 1 direction instead of 2
@@ -122,14 +130,14 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
 						Arrays.asList( //
-						"78364", "78904", // Terminus Angrignon
+								"78364", "78904", // Terminus Angrignon
 								"78126", // boul. St-Jean Baptiste / boul. St-Francis
 								"78135", // boul. St-Jean-Baptiste / face au stationnement inc
 								"78043" // boul. St-Joseph / boul. d'Anjou
 						)) //
 				.addTripSort(1, //
 						Arrays.asList( //
-						"78043", // boul. St-Joseph / boul. d'Anjou
+								"78043", // boul. St-Joseph / boul. d'Anjou
 								"78734", // ++
 								"78364", "78904" // Terminus Angrignon
 						)) //
@@ -139,14 +147,14 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
 				.addTripSort(0, //
 						Arrays.asList( //
-						"78364", "78905", // Terminus Angrignon
+								"78364", "78905", // Terminus Angrignon
 								"78315", // ++
 								"78128", // boul. St-Francis / boul. St-Jean-Baptiste
 								"78171" // boul. d'Anjou / boul. St-Joseph
 						)) //
 				.addTripSort(1, //
 						Arrays.asList( //
-						"78171", // boul. d'Anjou / boul. St-Joseph
+								"78171", // boul. d'Anjou / boul. St-Joseph
 								"78136", // ++
 								"78364", "78905" // Terminus Angrignon
 						)) //
@@ -156,13 +164,13 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 				1, MTrip.HEADSIGN_TYPE_STRING, "Anjou / St-Joseph") //
 				.addTripSort(0, //
 						Arrays.asList( //
-						"78885", // Faubourg Châteauguay
+								"78885", // Faubourg Châteauguay
 								"78022", // boul. Primeau / rue Principale
 								"78043" // boul. St-Joseph / boul. d'Anjou
 						)) //
 				.addTripSort(1, //
 						Arrays.asList( //
-						"78043", // boul. St-Joseph / boul. d'Anjou
+								"78043", // boul. St-Joseph / boul. d'Anjou
 								"78023", // rue Principale / boul. Primeau
 								"78885" // Faubourg Châteauguay
 						)) //
@@ -170,30 +178,33 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
+	@NotNull
 	@Override
-	public String cleanStopOriginalId(String gStopId) {
+	public String cleanStopOriginalId(@NotNull String gStopId) {
 		gStopId = CleanUtils.cleanMergedID(gStopId);
 		return gStopId;
 	}
 
 	@Override
-	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
+	public int compareEarly(long routeId, @NotNull List<MTripStop> list1, @NotNull List<MTripStop> list2, @NotNull MTripStop ts1, @NotNull MTripStop ts2, @NotNull GStop ts1GStop, @NotNull GStop ts2GStop) {
 		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
 			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop, this);
 		}
 		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
 	}
 
+	@NotNull
 	@Override
-	public ArrayList<MTrip> splitTrip(MRoute mRoute, GTrip gTrip, GSpec gtfs) {
+	public ArrayList<MTrip> splitTrip(@NotNull MRoute mRoute, @Nullable GTrip gTrip, @NotNull GSpec gtfs) {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return ALL_ROUTE_TRIPS2.get(mRoute.getId()).getAllTrips();
 		}
 		return super.splitTrip(mRoute, gTrip, gtfs);
 	}
 
+	@NotNull
 	@Override
-	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
+	public Pair<Long[], Integer[]> splitTripStop(@NotNull MRoute mRoute, @NotNull GTrip gTrip, @NotNull GTripStop gTripStop, @NotNull ArrayList<MTrip> splitTrips, @NotNull GSpec routeGTFS) {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()), this);
 		}
@@ -201,13 +212,13 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
+	public void setTripHeadsign(@NotNull MRoute mRoute, @NotNull MTrip mTrip, @NotNull GTrip gTrip, @NotNull GSpec gtfs) {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return; // split
 		}
 		mTrip.setHeadsignString(
-			cleanTripHeadsign(gTrip.getTripHeadsign()),
-			gTrip.getDirectionIdOrDefault()
+				cleanTripHeadsign(gTrip.getTripHeadsign()),
+				gTrip.getDirectionIdOrDefault()
 		);
 	}
 
@@ -217,7 +228,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
+	public boolean mergeHeadsign(@NotNull MTrip mTrip, @NotNull MTrip mTripToMerge) {
 		throw new MTLog.Fatal("%s: Using direction finder to merge %s and %s!", mTrip.getRouteId(), mTrip, mTripToMerge);
 	}
 
@@ -225,11 +236,12 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	private static final String DIRECTION_REPLACEMENT = "";
 
 	private static final String STATIONNEMENT_INCITATIF_SHORT = "P+R";
-	private static final Pattern STATIONNEMENT_INCITATIF_ = Pattern.compile("((^|\\W){1}(stationnement incitatif)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final Pattern STATIONNEMENT_INCITATIF_ = Pattern.compile("((^|\\W)(stationnement incitatif)(\\W|$))", Pattern.CASE_INSENSITIVE);
 	private static final String STATIONNEMENT_INCITATIF_REPLACEMENT = "$2" + STATIONNEMENT_INCITATIF_SHORT + "$4";
 
+	@NotNull
 	@Override
-	public String cleanTripHeadsign(String tripHeadsign) {
+	public String cleanTripHeadsign(@NotNull String tripHeadsign) {
 		tripHeadsign = DIRECTION.matcher(tripHeadsign).replaceAll(DIRECTION_REPLACEMENT);
 		tripHeadsign = STATIONNEMENT_INCITATIF_.matcher(tripHeadsign).replaceAll(STATIONNEMENT_INCITATIF_REPLACEMENT);
 		tripHeadsign = CleanUtils.cleanStreetTypesFRCA(tripHeadsign);
@@ -244,15 +256,16 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern SPACE_WITH_FACE_AU = Pattern.compile("( face au )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	private static final Pattern SPACE_WITH_FACE = Pattern.compile("( face )", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-	private static final Pattern[] START_WITH_FACES = new Pattern[] { START_WITH_FACE_A, START_WITH_FACE_AU, START_WITH_FACE };
+	private static final Pattern[] START_WITH_FACES = new Pattern[]{START_WITH_FACE_A, START_WITH_FACE_AU, START_WITH_FACE};
 
-	private static final Pattern[] SPACE_FACES = new Pattern[] { SPACE_FACE_A, SPACE_WITH_FACE_AU, SPACE_WITH_FACE };
+	private static final Pattern[] SPACE_FACES = new Pattern[]{SPACE_FACE_A, SPACE_WITH_FACE_AU, SPACE_WITH_FACE};
 
 	private static final Pattern AVENUE = Pattern.compile("( avenue)", Pattern.CASE_INSENSITIVE);
 	private static final String AVENUE_REPLACEMENT = " av.";
 
+	@NotNull
 	@Override
-	public String cleanStopName(String gStopName) {
+	public String cleanStopName(@NotNull String gStopName) {
 		gStopName = AVENUE.matcher(gStopName).replaceAll(AVENUE_REPLACEMENT);
 		gStopName = Utils.replaceAll(gStopName, START_WITH_FACES, CleanUtils.SPACE);
 		gStopName = Utils.replaceAll(gStopName, SPACE_FACES, CleanUtils.SPACE);
@@ -266,8 +279,9 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	private static final String ZERO = "0";
 
+	@NotNull
 	@Override
-	public String getStopCode(GStop gStop) {
+	public String getStopCode(@NotNull GStop gStop) {
 		if (ZERO.equals(gStop.getStopCode())) {
 			return null;
 		}
@@ -275,27 +289,29 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public int getStopId(GStop gStop) {
+	public int getStopId(@NotNull GStop gStop) {
 		String stopCode = getStopCode(gStop);
 		if (stopCode != null && stopCode.length() > 0 && Utils.isDigitsOnly(stopCode)) {
-			return Integer.valueOf(stopCode); // using stop code as stop ID
+			return Integer.parseInt(stopCode); // using stop code as stop ID
 		}
-		Matcher matcher = DIGITS.matcher(gStop.getStopId());
+		//noinspection deprecation
+		final String stopId1 = gStop.getStopId();
+		Matcher matcher = DIGITS.matcher(stopId1);
 		if (matcher.find()) {
 			int digits = Integer.parseInt(matcher.group());
 			int stopId;
-			if (gStop.getStopId().startsWith("KAH")) {
+			if (stopId1.startsWith("KAH")) {
 				stopId = 1_000_000;
 			} else {
 				throw new MTLog.Fatal("Stop doesn't have an ID (start with)! %s", gStop);
 			}
-			if (gStop.getStopId().endsWith(A)) {
+			if (stopId1.endsWith(A)) {
 				stopId += 1000;
-			} else if (gStop.getStopId().endsWith(B)) {
+			} else if (stopId1.endsWith(B)) {
 				stopId += 2000;
-			} else if (gStop.getStopId().endsWith(C)) {
+			} else if (stopId1.endsWith(C)) {
 				stopId += 3000;
-			} else if (gStop.getStopId().endsWith(D)) {
+			} else if (stopId1.endsWith(D)) {
 				stopId += 4000;
 			} else {
 				throw new MTLog.Fatal("Stop doesn't have an ID (end with)! %s!", gStop);
