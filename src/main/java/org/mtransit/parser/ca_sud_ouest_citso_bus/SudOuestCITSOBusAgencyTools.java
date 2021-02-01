@@ -5,9 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
-import org.mtransit.parser.Pair;
-import org.mtransit.parser.SplitUtils;
-import org.mtransit.parser.SplitUtils.RouteTripSpec;
 import org.mtransit.parser.Utils;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
@@ -15,17 +12,11 @@ import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GSpec;
 import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
-import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
 import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
-import org.mtransit.parser.mt.data.MTripStop;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -125,66 +116,6 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		return AGENCY_COLOR;
 	}
 
-	private static final HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
-
-	static {
-		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
-		//noinspection deprecation
-		map2.put(31L, new RouteTripSpec(31L, // BECAUSE 1 direction instead of 2
-				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
-				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
-				.addTripSort(0, //
-						Arrays.asList( //
-								"78364", "78904", // Terminus Angrignon
-								"78126", // boul. St-Jean Baptiste / boul. St-Francis
-								"78135", // boul. St-Jean-Baptiste / face au stationnement inc
-								"78043" // boul. St-Joseph / boul. d'Anjou
-						)) //
-				.addTripSort(1, //
-						Arrays.asList( //
-								"78043", // boul. St-Joseph / boul. d'Anjou
-								"78734", // ++
-								"78364", "78904" // Terminus Angrignon
-						)) //
-				.compileBothTripSort());
-		//noinspection deprecation
-		map2.put(32L, new RouteTripSpec(32L, // BECAUSE 1 direction instead of 2
-				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
-				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
-				.addTripSort(0, //
-						Arrays.asList( //
-								"78364", "78905", // Terminus Angrignon
-								"78315", // ++
-								"78128", // boul. St-Francis / boul. St-Jean-Baptiste
-								"78171" // boul. d'Anjou / boul. St-Joseph
-						)) //
-				.addTripSort(1, //
-						Arrays.asList( //
-								"78171", // boul. d'Anjou / boul. St-Joseph
-								"78136", // ++
-								"78364", "78905" // Terminus Angrignon
-						)) //
-				.compileBothTripSort());
-		//noinspection deprecation
-		map2.put(33L, new RouteTripSpec(33L, // BECAUSE 1 direction instead of 2
-				0, MTrip.HEADSIGN_TYPE_STRING, "Faubourg Châteauguay", //
-				1, MTrip.HEADSIGN_TYPE_STRING, "Anjou / St-Joseph") //
-				.addTripSort(0, //
-						Arrays.asList( //
-								"78885", // Faubourg Châteauguay
-								"78022", // boul. Primeau / rue Principale
-								"78043" // boul. St-Joseph / boul. d'Anjou
-						)) //
-				.addTripSort(1, //
-						Arrays.asList( //
-								"78043", // boul. St-Joseph / boul. d'Anjou
-								"78023", // rue Principale / boul. Primeau
-								"78885" // Faubourg Châteauguay
-						)) //
-				.compileBothTripSort());
-		ALL_ROUTE_TRIPS2 = map2;
-	}
-
 	@NotNull
 	@Override
 	public String cleanStopOriginalId(@NotNull String gStopId) {
@@ -193,36 +124,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public int compareEarly(long routeId, @NotNull List<MTripStop> list1, @NotNull List<MTripStop> list2, @NotNull MTripStop ts1, @NotNull MTripStop ts2, @NotNull GStop ts1GStop, @NotNull GStop ts2GStop) {
-		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
-			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop, this);
-		}
-		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
-	}
-
-	@NotNull
-	@Override
-	public ArrayList<MTrip> splitTrip(@NotNull MRoute mRoute, @Nullable GTrip gTrip, @NotNull GSpec gtfs) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return ALL_ROUTE_TRIPS2.get(mRoute.getId()).getAllTrips();
-		}
-		return super.splitTrip(mRoute, gTrip, gtfs);
-	}
-
-	@NotNull
-	@Override
-	public Pair<Long[], Integer[]> splitTripStop(@NotNull MRoute mRoute, @NotNull GTrip gTrip, @NotNull GTripStop gTripStop, @NotNull ArrayList<MTrip> splitTrips, @NotNull GSpec routeGTFS) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()), this);
-		}
-		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
-	}
-
-	@Override
 	public void setTripHeadsign(@NotNull MRoute mRoute, @NotNull MTrip mTrip, @NotNull GTrip gTrip, @NotNull GSpec gtfs) {
-		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return; // split
-		}
 		mTrip.setHeadsignString(
 				cleanTripHeadsign(gTrip.getTripHeadsignOrDefault()),
 				gTrip.getDirectionIdOrDefault()
