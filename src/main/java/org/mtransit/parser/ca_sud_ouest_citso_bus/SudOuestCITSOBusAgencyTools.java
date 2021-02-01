@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.mtransit.parser.Constants.SPACE_;
+import static org.mtransit.parser.StringUtils.EMPTY;
+
 // https://exo.quebec/en/about/open-data
 // https://exo.quebec/xdata/citso/google_transit.zip
 public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
@@ -43,42 +46,43 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		new SudOuestCITSOBusAgencyTools().start(args);
 	}
 
-	private HashSet<Integer> serviceIds;
+	@Nullable
+	private HashSet<Integer> serviceIdInts;
 
 	@Override
 	public void start(@NotNull String[] args) {
 		MTLog.log("Generating CITSO bus data...");
 		long start = System.currentTimeMillis();
-		this.serviceIds = extractUsefulServiceIdInts(args, this);
+		this.serviceIdInts = extractUsefulServiceIdInts(args, this, true);
 		super.start(args);
 		MTLog.log("Generating CITSO bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
 	@Override
 	public boolean excludingAll() {
-		return this.serviceIds != null && this.serviceIds.isEmpty();
+		return this.serviceIdInts != null && this.serviceIdInts.isEmpty();
 	}
 
 	@Override
 	public boolean excludeCalendar(@NotNull GCalendar gCalendar) {
-		if (this.serviceIds != null) {
-			return excludeUselessCalendarInt(gCalendar, this.serviceIds);
+		if (this.serviceIdInts != null) {
+			return excludeUselessCalendarInt(gCalendar, this.serviceIdInts);
 		}
 		return super.excludeCalendar(gCalendar);
 	}
 
 	@Override
 	public boolean excludeCalendarDate(@NotNull GCalendarDate gCalendarDates) {
-		if (this.serviceIds != null) {
-			return excludeUselessCalendarDateInt(gCalendarDates, this.serviceIds);
+		if (this.serviceIdInts != null) {
+			return excludeUselessCalendarDateInt(gCalendarDates, this.serviceIdInts);
 		}
 		return super.excludeCalendarDate(gCalendarDates);
 	}
 
 	@Override
 	public boolean excludeTrip(@NotNull GTrip gTrip) {
-		if (this.serviceIds != null) {
-			return excludeUselessTripInt(gTrip, this.serviceIds);
+		if (this.serviceIdInts != null) {
+			return excludeUselessTripInt(gTrip, this.serviceIdInts);
 		}
 		return super.excludeTrip(gTrip);
 	}
@@ -92,7 +96,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	@NotNull
 	@Override
 	public String getRouteLongName(@NotNull GRoute gRoute) {
-		String routeLongName = gRoute.getRouteLongName();
+		String routeLongName = gRoute.getRouteLongNameOrDefault();
 		routeLongName = CleanUtils.SAINT.matcher(routeLongName).replaceAll(CleanUtils.SAINT_REPLACEMENT);
 		return CleanUtils.cleanLabel(routeLongName);
 	}
@@ -125,6 +129,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
+		//noinspection deprecation
 		map2.put(31L, new RouteTripSpec(31L, // BECAUSE 1 direction instead of 2
 				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
@@ -142,6 +147,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 								"78364", "78904" // Terminus Angrignon
 						)) //
 				.compileBothTripSort());
+		//noinspection deprecation
 		map2.put(32L, new RouteTripSpec(32L, // BECAUSE 1 direction instead of 2
 				0, MTrip.HEADSIGN_TYPE_STRING, "Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Montréal") //
@@ -159,6 +165,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 								"78364", "78905" // Terminus Angrignon
 						)) //
 				.compileBothTripSort());
+		//noinspection deprecation
 		map2.put(33L, new RouteTripSpec(33L, // BECAUSE 1 direction instead of 2
 				0, MTrip.HEADSIGN_TYPE_STRING, "Faubourg Châteauguay", //
 				1, MTrip.HEADSIGN_TYPE_STRING, "Anjou / St-Joseph") //
@@ -217,7 +224,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 			return; // split
 		}
 		mTrip.setHeadsignString(
-				cleanTripHeadsign(gTrip.getTripHeadsign()),
+				cleanTripHeadsign(gTrip.getTripHeadsignOrDefault()),
 				gTrip.getDirectionIdOrDefault()
 		);
 	}
@@ -232,18 +239,20 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		throw new MTLog.Fatal("%s: Using direction finder to merge %s and %s!", mTrip.getRouteId(), mTrip, mTripToMerge);
 	}
 
-	private static final Pattern DIRECTION = Pattern.compile("(direction )", Pattern.CASE_INSENSITIVE);
-	private static final String DIRECTION_REPLACEMENT = "";
+	private static final Pattern DIRECTION_ = CleanUtils.cleanWords("direction");
+	private static final String DIRECTION_REPLACEMENT = CleanUtils.cleanWordsReplacement(EMPTY);
+	private static final Pattern EXPRESS_ = CleanUtils.cleanWords("express");
+	private static final String EXPRESS_REPLACEMENT = CleanUtils.cleanWordsReplacement(EMPTY);
 
-	private static final String STATIONNEMENT_INCITATIF_SHORT = "P+R";
-	private static final Pattern STATIONNEMENT_INCITATIF_ = Pattern.compile("((^|\\W)(stationnement incitatif)(\\W|$))", Pattern.CASE_INSENSITIVE);
-	private static final String STATIONNEMENT_INCITATIF_REPLACEMENT = "$2" + STATIONNEMENT_INCITATIF_SHORT + "$4";
+	private static final Pattern _DASH_ = Pattern.compile("( - )");
+	private static final String _DASH_REPLACEMENT = "<>"; // form<>to
 
 	@NotNull
 	@Override
 	public String cleanTripHeadsign(@NotNull String tripHeadsign) {
-		tripHeadsign = DIRECTION.matcher(tripHeadsign).replaceAll(DIRECTION_REPLACEMENT);
-		tripHeadsign = STATIONNEMENT_INCITATIF_.matcher(tripHeadsign).replaceAll(STATIONNEMENT_INCITATIF_REPLACEMENT);
+		tripHeadsign = _DASH_.matcher(tripHeadsign).replaceAll(_DASH_REPLACEMENT); // from - to => form<>to
+		tripHeadsign = DIRECTION_.matcher(tripHeadsign).replaceAll(DIRECTION_REPLACEMENT);
+		tripHeadsign = EXPRESS_.matcher(tripHeadsign).replaceAll(EXPRESS_REPLACEMENT);
 		tripHeadsign = CleanUtils.cleanStreetTypesFRCA(tripHeadsign);
 		return CleanUtils.cleanLabelFR(tripHeadsign);
 	}
@@ -260,15 +269,16 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	private static final Pattern[] SPACE_FACES = new Pattern[]{SPACE_FACE_A, SPACE_WITH_FACE_AU, SPACE_WITH_FACE};
 
-	private static final Pattern AVENUE = Pattern.compile("( avenue)", Pattern.CASE_INSENSITIVE);
-	private static final String AVENUE_REPLACEMENT = " av.";
+	private static final Pattern DEVANT_ = CleanUtils.cleanWordsFR("devant");
 
 	@NotNull
 	@Override
 	public String cleanStopName(@NotNull String gStopName) {
-		gStopName = AVENUE.matcher(gStopName).replaceAll(AVENUE_REPLACEMENT);
+		gStopName = _DASH_.matcher(gStopName).replaceAll(SPACE_);
+		gStopName = DEVANT_.matcher(gStopName).replaceAll(EMPTY);
 		gStopName = Utils.replaceAll(gStopName, START_WITH_FACES, CleanUtils.SPACE);
 		gStopName = Utils.replaceAll(gStopName, SPACE_FACES, CleanUtils.SPACE);
+		gStopName = CleanUtils.cleanStreetTypesFRCA(gStopName);
 		return CleanUtils.cleanLabelFR(gStopName);
 	}
 
