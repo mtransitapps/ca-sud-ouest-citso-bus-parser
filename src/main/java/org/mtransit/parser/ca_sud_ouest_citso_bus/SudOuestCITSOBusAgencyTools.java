@@ -1,81 +1,38 @@
 package org.mtransit.parser.ca_sud_ouest_citso_bus;
 
+import static org.mtransit.commons.Constants.SPACE_;
+import static org.mtransit.parser.StringUtils.EMPTY;
+
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.mtransit.parser.CleanUtils;
+import org.mtransit.commons.CharUtils;
+import org.mtransit.commons.CleanUtils;
+import org.mtransit.commons.RegexUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
-import org.mtransit.parser.Utils;
-import org.mtransit.parser.gtfs.data.GCalendar;
-import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
-import org.mtransit.parser.gtfs.data.GSpec;
 import org.mtransit.parser.gtfs.data.GStop;
-import org.mtransit.parser.gtfs.data.GTrip;
 import org.mtransit.parser.mt.data.MAgency;
-import org.mtransit.parser.mt.data.MRoute;
-import org.mtransit.parser.mt.data.MTrip;
 
-import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.mtransit.parser.Constants.SPACE_;
-import static org.mtransit.parser.StringUtils.EMPTY;
 
 // https://exo.quebec/en/about/open-data
 // https://exo.quebec/xdata/citso/google_transit.zip
 public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
-	public static void main(@Nullable String[] args) {
-		if (args == null || args.length == 0) {
-			args = new String[3];
-			args[0] = "input/gtfs.zip";
-			args[1] = "../../mtransitapps/ca-sud-ouest-citso-bus-android/res/raw/";
-			args[2] = ""; // files-prefix
-		}
+	public static void main(@NotNull String[] args) {
 		new SudOuestCITSOBusAgencyTools().start(args);
 	}
 
-	@Nullable
-	private HashSet<Integer> serviceIdInts;
-
 	@Override
-	public void start(@NotNull String[] args) {
-		MTLog.log("Generating CITSO bus data...");
-		long start = System.currentTimeMillis();
-		this.serviceIdInts = extractUsefulServiceIdInts(args, this, true);
-		super.start(args);
-		MTLog.log("Generating CITSO bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
+	public boolean defaultExcludeEnabled() {
+		return true;
 	}
 
+	@NotNull
 	@Override
-	public boolean excludingAll() {
-		return this.serviceIdInts != null && this.serviceIdInts.isEmpty();
-	}
-
-	@Override
-	public boolean excludeCalendar(@NotNull GCalendar gCalendar) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessCalendarInt(gCalendar, this.serviceIdInts);
-		}
-		return super.excludeCalendar(gCalendar);
-	}
-
-	@Override
-	public boolean excludeCalendarDate(@NotNull GCalendarDate gCalendarDates) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessCalendarDateInt(gCalendarDates, this.serviceIdInts);
-		}
-		return super.excludeCalendarDate(gCalendarDates);
-	}
-
-	@Override
-	public boolean excludeTrip(@NotNull GTrip gTrip) {
-		if (this.serviceIdInts != null) {
-			return excludeUselessTripInt(gTrip, this.serviceIdInts);
-		}
-		return super.excludeTrip(gTrip);
+	public String getAgencyName() {
+		return "exo Sud-Ouest";
 	}
 
 	@NotNull
@@ -86,8 +43,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	@NotNull
 	@Override
-	public String getRouteLongName(@NotNull GRoute gRoute) {
-		String routeLongName = gRoute.getRouteLongNameOrDefault();
+	public String cleanRouteLongName(@NotNull String routeLongName) {
 		routeLongName = CleanUtils.SAINT.matcher(routeLongName).replaceAll(CleanUtils.SAINT_REPLACEMENT);
 		return CleanUtils.cleanLabel(routeLongName);
 	}
@@ -98,12 +54,15 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	public long getRouteId(@NotNull GRoute gRoute) {
 		//noinspection deprecation
 		final String routeId = gRoute.getRouteId();
-		if (!Utils.isDigitsOnly(routeId)) {
-			Matcher matcher = DIGITS.matcher(routeId);
+		if (!CharUtils.isDigitsOnly(routeId)) {
+			final Matcher matcher = DIGITS.matcher(routeId);
 			if (matcher.find()) {
-				return Integer.parseInt(matcher.group());
+				final int digits = Integer.parseInt(matcher.group());
+				if (routeId.startsWith("T-")) {
+					return 20_000L + digits;
+				}
 			}
-			throw new MTLog.Fatal("Unexpected route ID for %s!", gRoute);
+			throw new MTLog.Fatal("Unexpected route ID for %s!", gRoute.toStringPlus());
 		}
 		return super.getRouteId(gRoute);
 	}
@@ -124,21 +83,8 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public void setTripHeadsign(@NotNull MRoute mRoute, @NotNull MTrip mTrip, @NotNull GTrip gTrip, @NotNull GSpec gtfs) {
-		mTrip.setHeadsignString(
-				cleanTripHeadsign(gTrip.getTripHeadsignOrDefault()),
-				gTrip.getDirectionIdOrDefault()
-		);
-	}
-
-	@Override
 	public boolean directionFinderEnabled() {
 		return true;
-	}
-
-	@Override
-	public boolean mergeHeadsign(@NotNull MTrip mTrip, @NotNull MTrip mTripToMerge) {
-		throw new MTLog.Fatal("%s: Using direction finder to merge %s and %s!", mTrip.getRouteId(), mTrip, mTripToMerge);
 	}
 
 	private static final Pattern DIRECTION_ = CleanUtils.cleanWords("direction");
@@ -178,8 +124,8 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	public String cleanStopName(@NotNull String gStopName) {
 		gStopName = _DASH_.matcher(gStopName).replaceAll(SPACE_);
 		gStopName = DEVANT_.matcher(gStopName).replaceAll(EMPTY);
-		gStopName = Utils.replaceAll(gStopName, START_WITH_FACES, CleanUtils.SPACE);
-		gStopName = Utils.replaceAll(gStopName, SPACE_FACES, CleanUtils.SPACE);
+		gStopName = RegexUtils.replaceAllNN(gStopName, START_WITH_FACES, CleanUtils.SPACE);
+		gStopName = RegexUtils.replaceAllNN(gStopName, SPACE_FACES, CleanUtils.SPACE);
 		gStopName = CleanUtils.cleanStreetTypesFRCA(gStopName);
 		return CleanUtils.cleanLabelFR(gStopName);
 	}
@@ -195,7 +141,7 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public String getStopCode(@NotNull GStop gStop) {
 		if (ZERO.equals(gStop.getStopCode())) {
-			return null;
+			return EMPTY;
 		}
 		return super.getStopCode(gStop);
 	}
@@ -203,14 +149,14 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public int getStopId(@NotNull GStop gStop) {
 		String stopCode = getStopCode(gStop);
-		if (stopCode != null && stopCode.length() > 0 && Utils.isDigitsOnly(stopCode)) {
+		if (stopCode.length() > 0 && CharUtils.isDigitsOnly(stopCode)) {
 			return Integer.parseInt(stopCode); // using stop code as stop ID
 		}
 		//noinspection deprecation
 		final String stopId1 = gStop.getStopId();
-		Matcher matcher = DIGITS.matcher(stopId1);
+		final Matcher matcher = DIGITS.matcher(stopId1);
 		if (matcher.find()) {
-			int digits = Integer.parseInt(matcher.group());
+			final int digits = Integer.parseInt(matcher.group());
 			int stopId;
 			if (stopId1.startsWith("KAH")) {
 				stopId = 1_000_000;
