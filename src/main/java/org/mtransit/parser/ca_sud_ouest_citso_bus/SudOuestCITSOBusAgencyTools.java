@@ -1,18 +1,21 @@
 package org.mtransit.parser.ca_sud_ouest_citso_bus;
 
 import static org.mtransit.commons.Constants.SPACE_;
-import static org.mtransit.parser.StringUtils.EMPTY;
+import static org.mtransit.commons.RegexUtils.DIGITS;
+import static org.mtransit.commons.StringUtils.EMPTY;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.mtransit.commons.CharUtils;
 import org.mtransit.commons.CleanUtils;
 import org.mtransit.commons.RegexUtils;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.MTLog;
-import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.mt.data.MAgency;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,6 +25,12 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(@NotNull String[] args) {
 		new SudOuestCITSOBusAgencyTools().start(args);
+	}
+
+	@Nullable
+	@Override
+	public List<Locale> getSupportedLanguages() {
+		return LANG_FR;
 	}
 
 	@Override
@@ -41,6 +50,11 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		return MAgency.ROUTE_TYPE_BUS;
 	}
 
+	@Override
+	public boolean defaultRouteLongNameEnabled() {
+		return true;
+	}
+
 	@NotNull
 	@Override
 	public String cleanRouteLongName(@NotNull String routeLongName) {
@@ -48,31 +62,28 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		return CleanUtils.cleanLabel(routeLongName);
 	}
 
-	private static final Pattern DIGITS = Pattern.compile("[\\d]+");
-
 	@Override
-	public long getRouteId(@NotNull GRoute gRoute) {
-		//noinspection deprecation
-		final String routeId = gRoute.getRouteId();
-		if (!CharUtils.isDigitsOnly(routeId)) {
-			final Matcher matcher = DIGITS.matcher(routeId);
-			if (matcher.find()) {
-				final int digits = Integer.parseInt(matcher.group());
-				if (routeId.startsWith("T-")) {
-					return 20_000L + digits;
-				}
-			}
-			throw new MTLog.Fatal("Unexpected route ID for %s!", gRoute.toStringPlus());
-		}
-		return super.getRouteId(gRoute);
+	public boolean defaultRouteIdEnabled() {
+		return true;
 	}
 
-	private static final String AGENCY_COLOR = "1F1F1F"; // DARK GRAY (from GTFS)
+	@Override
+	public boolean useRouteShortNameForRouteId() {
+		return true;
+	}
+
+	private static final Pattern T_DASH_ = Pattern.compile("(t(-))", Pattern.CASE_INSENSITIVE);
 
 	@NotNull
 	@Override
-	public String getAgencyColor() {
-		return AGENCY_COLOR;
+	public String cleanRouteShortName(@NotNull String routeShortName) {
+		routeShortName = T_DASH_.matcher(routeShortName).replaceAll("T");
+		return super.cleanRouteShortName(routeShortName);
+	}
+
+	@Override
+	public boolean defaultAgencyColorEnabled() {
+		return true;
 	}
 
 	@NotNull
@@ -87,8 +98,6 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 		return true;
 	}
 
-	private static final Pattern DIRECTION_ = CleanUtils.cleanWords("direction");
-	private static final String DIRECTION_REPLACEMENT = CleanUtils.cleanWordsReplacement(EMPTY);
 	private static final Pattern EXPRESS_ = CleanUtils.cleanWords("express");
 	private static final String EXPRESS_REPLACEMENT = CleanUtils.cleanWordsReplacement(EMPTY);
 
@@ -98,8 +107,8 @@ public class SudOuestCITSOBusAgencyTools extends DefaultAgencyTools {
 	@NotNull
 	@Override
 	public String cleanTripHeadsign(@NotNull String tripHeadsign) {
+		tripHeadsign = CleanUtils.keepToFR(tripHeadsign);
 		tripHeadsign = _DASH_.matcher(tripHeadsign).replaceAll(_DASH_REPLACEMENT); // from - to => form<>to
-		tripHeadsign = DIRECTION_.matcher(tripHeadsign).replaceAll(DIRECTION_REPLACEMENT);
 		tripHeadsign = EXPRESS_.matcher(tripHeadsign).replaceAll(EXPRESS_REPLACEMENT);
 		tripHeadsign = CleanUtils.cleanStreetTypesFRCA(tripHeadsign);
 		return CleanUtils.cleanLabelFR(tripHeadsign);
